@@ -40,11 +40,13 @@ jobs:
           if [ "${{ github.ref_name }}" = "main" ]; then
             wrangler pages deploy dist \
               --project-name=vite-react-shadcn-ts \
-              --branch=main
+              --branch=main \
+              --commit-dirty=true
           else
             wrangler pages deploy dist \
               --project-name=vite-react-shadcn-ts \
-              --branch=${{ github.ref_name }}
+              --branch=${{ github.ref_name }} \
+              --commit-dirty=true
           fi
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

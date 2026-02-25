@@ -18,7 +18,13 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    cloudflare()
+    cloudflare({
+      outputDir: 'dist',
+      pagesConfig: {
+        outputDir: 'dist',
+        buildCommand: 'npm run build'
+      }
+    })
   ],
   resolve: {
     alias: {
