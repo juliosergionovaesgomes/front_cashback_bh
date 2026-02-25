@@ -39,11 +39,9 @@ jobs:
                     exit 1
                   fi
                   
-                  # Deploy to pages with npm build command
+                  # Deploy to pages with correct syntax
                   echo "Deploying to Pages..."
-                  wrangler pages deploy dist \
-                    --project-name=cold-band-8c50 \
-                    --compatibility-date=2024-01-01
+                  wrangler pages deploy dist --project-name=cold-band-8c50
               env:
                   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
