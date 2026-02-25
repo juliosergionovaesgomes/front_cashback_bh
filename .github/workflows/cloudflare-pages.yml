@@ -19,6 +19,15 @@ jobs:
             - run: npm install
             - run: npm run build
 
+            - name: Debug API Token
+              run: |
+                  echo "Account ID length: ${#CLOUDFLARE_ACCOUNT_ID}"
+                  echo "API Token length: ${#CLOUDFLARE_API_TOKEN}"
+                  echo "API Token starts with: ${CLOUDFLARE_API_TOKEN:0:8}..."
+              env:
+                  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+                  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
             - name: Publish to Cloudflare Pages
               uses: cloudflare/pages-action@v1
               with:
