@@ -1,10 +1,13 @@
 import heroBg from "@/assets/hero-bg.png";
 import CashbackForm from "@/components/CashbackForm";
-import { Shield, Zap, Trophy } from "lucide-react";
+import { Shield, Zap, Trophy, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { isAuthenticated, user, logout } = useAuth();
+
   return (
     <div className="min-h-screen bg-background bg-grid">
       {/* Nav */}
@@ -13,14 +16,39 @@ const Index = () => {
           <div className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
             <span className="font-display text-lg font-bold tracking-wider text-foreground">
-              CASH<span className="text-neon">BACK</span> CS
+              CASH<span className="text-neon">BACK</span> BH
             </span>
           </div>
-          <Link to="/login">
-            <Button variant="outline" size="sm" className="border-primary/40 text-primary hover:bg-primary/10 font-heading tracking-wider">
-              Admin Login
-            </Button>
-          </Link>
+          
+          <div className="flex items-center gap-3">
+            {isAuthenticated ? (
+              <>
+                <span className="text-sm text-muted-foreground hidden sm:inline">
+                  Olá, {user?.name}
+                </span>
+                <Link to="/dashboard">
+                  <Button variant="outline" size="sm" className="border-primary/40 text-primary hover:bg-primary/10 font-heading tracking-wider">
+                    <Settings className="h-4 w-4 mr-1" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={logout}
+                  className="text-muted-foreground hover:text-foreground font-heading tracking-wider"
+                >
+                  Sair
+                </Button>
+              </>
+            ) : (
+              <Link to="/login">
+                <Button variant="outline" size="sm" className="border-primary/40 text-primary hover:bg-primary/10 font-heading tracking-wider">
+                  Admin Login
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </nav>
 
