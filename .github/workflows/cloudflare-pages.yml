@@ -33,11 +33,11 @@ jobs:
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             wrangler pages deploy dist \
-              --project-name=frontcashback \
+              --project-name=cold-band-8c50 \
               --branch=main
           else
             wrangler pages deploy dist \
-              --project-name=frontcashback \
+              --project-name=cold-band-8c50 \
               --branch=${{ github.ref_name }}
           fi
         env:
