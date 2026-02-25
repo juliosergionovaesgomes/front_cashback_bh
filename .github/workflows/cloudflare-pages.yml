@@ -41,7 +41,7 @@ jobs:
                   
                   # Deploy to pages with correct syntax
                   echo "Deploying to Pages..."
-                  wrangler pages deploy dist --project-name=cold-band-8c50
+                  wrangler pages deploy dist --project-name=frontcashback
               env:
                   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
