@@ -1,0 +1,51 @@
+name: Deploy Vite to Cloudflare Pages
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build project
+              run: npm run build
+
+            - name: Deploy to Cloudflare Pages
+              run: |
+                  # Install wrangler
+                  npm install -g wrangler@latest
+                  
+                  # Try different auth methods
+                  if [ ! -z "$CLOUDFLARE_API_TOKEN" ]; then
+                    echo "Using API token authentication..."
+                    wrangler whoami
+                  elif [ ! -z "$CLOUDFLARE_EMAIL" ] && [ ! -z "$CLOUDFLARE_API_KEY" ]; then
+                    echo "Using global API key authentication..."
+                    wrangler whoami
+                  else
+                    echo "No valid authentication found"
+                    exit 1
+                  fi
+                  
+                  # Deploy to pages with npm build command
+                  echo "Deploying to Pages..."
+                  wrangler pages deploy dist \
+                    --project-name=cold-band-8c50 \
+                    --compatibility-date=2024-01-01
+              env:
+                  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+                  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+                  CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+                  CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
