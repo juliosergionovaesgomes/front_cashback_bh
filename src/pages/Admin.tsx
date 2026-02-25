@@ -9,68 +9,61 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, LogOut, Download, Search, Users, FileSpreadsheet, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
-
-interface Submission {
-  id: string;
-  full_name: string;
-  email: string;
-  steam_id: string;
-  game_nickname: string;
-  phone: string | null;
-  pix_key: string;
-  amount: number;
-  status: string;
-  notes: string | null;
-  created_at: string;
-}
+import { useAuth } from "@/contexts/AuthContext";
+import { cashbackService, CashbackEntry } from "@/lib/mockData";
 
 export default function Admin() {
   const navigate = useNavigate();
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const { user, logout } = useAuth();
+  const [submissions, setSubmissions] = useState<CashbackEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    const init = async () => {
-
-      await fetchSubmissions();
-    };
-    init();
-  }, [navigate]);
+    if (!user || user.role !== 'admin') {
+      navigate('/login');
+      return;
+    }
+    fetchSubmissions();
+  }, [navigate, user]);
 
   const fetchSubmissions = async () => {
     setLoading(true);
-
-
-    if (true) {
+    try {
+      const data = await cashbackService.getAllEntries();
+      setSubmissions(data);
+      toast.success(`${data.length} solicitações carregadas`);
+    } catch (error) {
       toast.error("Erro ao carregar dados.");
-    } else {
     }
     setLoading(false);
   };
 
   const updateStatus = async (id: string, status: string) => {
-
-    if (true) {
+    try {
+      await cashbackService.updateStatus(id, status as CashbackEntry['status']);
+      await fetchSubmissions(); // Reload data
+      toast.success(`Status atualizado para ${status}`);
+    } catch (error) {
       toast.error("Erro ao atualizar status.");
-    } else {
     }
   };
 
   const exportToExcel = () => {
     const exportData = filtered.map(s => ({
-      "Nome": s.full_name,
+      "Nome": s.customerName,
       "Email": s.email,
-      "Steam ID": s.steam_id,
-      "Nickname": s.game_nickname,
-      "Telefone": s.phone || "",
-      "Chave PIX": s.pix_key,
-      "Valor (R$)": s.amount,
+      "CPF": s.cpf,
+      "Telefone": s.phone,
+      "Loja": s.store,
+      "Categoria": s.category,
+      "Valor Compra (R$)": s.purchaseValue,
+      "Cashback %": s.cashbackPercent,
+      "Valor Cashback (R$)": s.cashbackValue,
       "Status": s.status,
-      "Observações": s.notes || "",
-      "Data": new Date(s.created_at).toLocaleDateString("pt-BR"),
+      "Data": s.createdAt.toLocaleDateString("pt-BR"),
+      "Aprovado em": s.approvedAt ? s.approvedAt.toLocaleDateString("pt-BR") : "",
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -81,19 +74,21 @@ export default function Admin() {
   };
 
   const handleLogout = async () => {
+    logout();
+    navigate('/login');
   };
 
   const filtered = submissions.filter(s => {
     const matchSearch = search === "" ||
-      s.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      s.customerName.toLowerCase().includes(search.toLowerCase()) ||
       s.email.toLowerCase().includes(search.toLowerCase()) ||
-      s.game_nickname.toLowerCase().includes(search.toLowerCase()) ||
-      s.steam_id.toLowerCase().includes(search.toLowerCase());
+      s.cpf.toLowerCase().includes(search.toLowerCase()) ||
+      s.store.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || s.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
-  const totalAmount = filtered.reduce((acc, s) => acc + Number(s.amount), 0);
+  const totalAmount = filtered.reduce((acc, s) => acc + Number(s.cashbackValue), 0);
 
   const statusColor = (status: string) => {
     switch (status) {
@@ -105,19 +100,46 @@ export default function Admin() {
     }
   };
 
-  if (userRole !== "admin") return null;
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-muted-foreground">Acesso Negado</h2>
+          <p className="text-muted-foreground mb-4">Você precisa ser administrador para acessar esta página.</p>
+          <Button onClick={() => navigate('/login')}>Fazer Login</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background bg-grid">
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
-            <span className="font-display text-lg font-bold text-foreground">
-              ADMIN <span className="text-neon">PANEL</span>
-            </span>
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/" className="flex items-center gap-2">
+              <Shield className="h-6 w-6 text-primary" />
+              <span className="font-display text-lg font-bold text-foreground">
+                ADMIN <span className="text-neon">PANEL</span>
+              </span>
+            </Link>
+            <nav className="flex items-center gap-4">
+              <Link 
+                to="/dashboard" 
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link 
+                to="/admin" 
+                className="text-sm font-medium text-primary border-b border-primary/50"
+              >
+                Admin
+              </Link>
+            </nav>
+          </div>
           <Button variant="ghost" onClick={handleLogout} className="text-muted-foreground hover:text-foreground">
             <LogOut className="h-4 w-4 mr-2" /> Sair
           </Button>
@@ -140,7 +162,7 @@ export default function Admin() {
             <div className="flex items-center gap-3">
               <FileSpreadsheet className="h-8 w-8 text-secondary" />
               <div>
-                <p className="text-sm text-muted-foreground font-heading">Total Valor (filtrado)</p>
+                <p className="text-sm text-muted-foreground font-heading">Total Cashback (filtrado)</p>
                 <p className="text-3xl font-display font-bold text-foreground">
                   R$ {totalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </p>
@@ -165,7 +187,7 @@ export default function Admin() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome, email, nickname ou steam ID..."
+              placeholder="Buscar por nome, email, CPF ou loja..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-10 bg-card border-border"
@@ -196,10 +218,11 @@ export default function Admin() {
                 <TableRow className="border-border hover:bg-muted/50">
                   <TableHead className="font-heading text-muted-foreground">Nome</TableHead>
                   <TableHead className="font-heading text-muted-foreground">Email</TableHead>
-                  <TableHead className="font-heading text-muted-foreground">Nickname</TableHead>
-                  <TableHead className="font-heading text-muted-foreground">Steam ID</TableHead>
-                  <TableHead className="font-heading text-muted-foreground">PIX</TableHead>
-                  <TableHead className="font-heading text-muted-foreground">Valor</TableHead>
+                  <TableHead className="font-heading text-muted-foreground">CPF</TableHead>
+                  <TableHead className="font-heading text-muted-foreground">Loja</TableHead>
+                  <TableHead className="font-heading text-muted-foreground">Categoria</TableHead>
+                  <TableHead className="font-heading text-muted-foreground">Valor Compra</TableHead>
+                  <TableHead className="font-heading text-muted-foreground">Cashback</TableHead>
                   <TableHead className="font-heading text-muted-foreground">Status</TableHead>
                   <TableHead className="font-heading text-muted-foreground">Data</TableHead>
                   <TableHead className="font-heading text-muted-foreground">Ações</TableHead>
@@ -207,24 +230,25 @@ export default function Admin() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">Carregando...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="text-center py-12 text-muted-foreground">Carregando...</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">Nenhuma solicitação encontrada.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="text-center py-12 text-muted-foreground">Nenhuma solicitação encontrada.</TableCell></TableRow>
                 ) : (
                   filtered.map(s => (
                     <TableRow key={s.id} className="border-border hover:bg-muted/30">
-                      <TableCell className="font-medium">{s.full_name}</TableCell>
+                      <TableCell className="font-medium">{s.customerName}</TableCell>
                       <TableCell className="text-sm">{s.email}</TableCell>
-                      <TableCell className="text-primary font-medium">{s.game_nickname}</TableCell>
-                      <TableCell className="text-xs font-mono">{s.steam_id}</TableCell>
-                      <TableCell className="text-xs">{s.pix_key}</TableCell>
-                      <TableCell className="font-mono">R$ {Number(s.amount).toFixed(2)}</TableCell>
+                      <TableCell className="text-xs font-mono">{s.cpf}</TableCell>
+                      <TableCell className="text-sm">{s.store}</TableCell>
+                      <TableCell className="text-sm">{s.category}</TableCell>
+                      <TableCell className="font-mono">R$ {Number(s.purchaseValue).toFixed(2)}</TableCell>
+                      <TableCell className="font-mono text-primary">R$ {Number(s.cashbackValue).toFixed(2)} ({s.cashbackPercent}%)</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={statusColor(s.status)}>
                           {s.status === "pending" ? "Pendente" : s.status === "approved" ? "Aprovado" : s.status === "rejected" ? "Rejeitado" : "Pago"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{new Date(s.created_at).toLocaleDateString("pt-BR")}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{s.createdAt.toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell>
                         <Select value={s.status} onValueChange={(val) => updateStatus(s.id, val)}>
                           <SelectTrigger className="w-28 h-8 text-xs bg-muted border-border">
@@ -234,7 +258,6 @@ export default function Admin() {
                             <SelectItem value="pending">Pendente</SelectItem>
                             <SelectItem value="approved">Aprovado</SelectItem>
                             <SelectItem value="rejected">Rejeitado</SelectItem>
-                            <SelectItem value="paid">Pago</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>

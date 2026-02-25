@@ -13,7 +13,21 @@ export default defineConfig({
   },
   base: '/',
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          query: ['@tanstack/react-query'],
+          icons: ['lucide-react'],
+          utils: ['class-variance-authority', 'clsx', 'tailwind-merge'],
+          xlsx: ['xlsx'],
+          ui: ['sonner']
+        }
+      }
+    }
   },
   plugins: [
     react()

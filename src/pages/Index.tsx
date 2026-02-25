@@ -1,9 +1,12 @@
+import { Suspense, lazy } from "react";
 import heroBg from "@/assets/hero-bg.png";
-import CashbackForm from "@/components/CashbackForm";
 import { Shield, Zap, Trophy, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+
+// Lazy load CashbackForm
+const CashbackForm = lazy(() => import("@/components/CashbackForm"));
 
 const Index = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -89,7 +92,15 @@ const Index = () => {
       <section className="relative pb-24" id="form">
         <div className="container max-w-2xl">
           <div className="bg-card border border-border rounded-lg p-6 md:p-10 glow-neon">
-            <CashbackForm />
+            <Suspense 
+              fallback={
+                <div className="flex items-center justify-center p-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+                </div>
+              }
+            >
+              <CashbackForm />
+            </Suspense>
           </div>
         </div>
       </section>

@@ -25,7 +25,7 @@ type CashbackFormData = z.infer<typeof cashbackSchema>;
 
 const stores = [
   "Shopping Del Rey",
-  "BH Shopping", 
+  "BH Shopping",
   "Pátio Savassi",
   "Diamond Mall",
   "Shopping Estação",
@@ -37,7 +37,7 @@ const stores = [
 const categories = [
   "Eletrônicos",
   "Moda",
-  "Alimentação", 
+  "Alimentação",
   "Beleza",
   "Livros",
   "Casa & Decoração",
@@ -49,7 +49,7 @@ export default function CashbackForm() {
   const [submitted, setSubmitted] = useState(false);
   const [selectedStore, setSelectedStore] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  
+
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setValue } = useForm<CashbackFormData>({
     resolver: zodResolver(cashbackSchema),
   });
@@ -73,12 +73,19 @@ export default function CashbackForm() {
     try {
       const cashbackPercent = getCashbackPercent(data.purchaseValue, data.category);
       const cashbackValue = (data.purchaseValue * cashbackPercent) / 100;
-      
+
       await cashbackService.addEntry({
-        ...data,
+        customerName: data.customerName,
+        email: data.email,
+        phone: data.phone,
+        cpf: data.cpf,
+        purchaseValue: data.purchaseValue,
+        store: data.store,
+        category: data.category,
         cashbackPercent,
         cashbackValue,
-        status: 'pending'
+        status: 'pending',
+        approvedAt: undefined
       });
 
       toast.success(`Solicitação enviada! Cashback de ${cashbackPercent}% = R$ ${cashbackValue.toFixed(2)}`);
@@ -114,53 +121,53 @@ export default function CashbackForm() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="customerName">Nome Completo *</Label>
-          <Input 
-            id="customerName" 
-            {...register("customerName")} 
-            placeholder="Seu nome completo" 
-            className="bg-muted border-border focus:border-primary" 
+          <Input
+            id="customerName"
+            {...register("customerName")}
+            placeholder="Seu nome completo"
+            className="bg-muted border-border focus:border-primary"
           />
           {errors.customerName && <p className="text-destructive text-sm">{errors.customerName.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="email">Email *</Label>
-          <Input 
-            id="email" 
-            type="email" 
-            {...register("email")} 
-            placeholder="email@exemplo.com" 
-            className="bg-muted border-border focus:border-primary" 
+          <Input
+            id="email"
+            type="email"
+            {...register("email")}
+            placeholder="email@exemplo.com"
+            className="bg-muted border-border focus:border-primary"
           />
           {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="phone">Telefone *</Label>
-          <Input 
-            id="phone" 
-            {...register("phone")} 
-            placeholder="(31) 99999-9999" 
-            className="bg-muted border-border focus:border-primary" 
+          <Input
+            id="phone"
+            {...register("phone")}
+            placeholder="(31) 99999-9999"
+            className="bg-muted border-border focus:border-primary"
           />
           {errors.phone && <p className="text-destructive text-sm">{errors.phone.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="cpf">CPF *</Label>
-          <Input 
-            id="cpf" 
-            {...register("cpf")} 
-            placeholder="000.000.000-00" 
-            className="bg-muted border-border focus:border-primary" 
+          <Input
+            id="cpf"
+            {...register("cpf")}
+            placeholder="000.000.000-00"
+            className="bg-muted border-border focus:border-primary"
           />
           {errors.cpf && <p className="text-destructive text-sm">{errors.cpf.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="store">Loja *</Label>
-          <Select 
-            value={selectedStore} 
+          <Select
+            value={selectedStore}
             onValueChange={(value) => {
               setSelectedStore(value);
               setValue("store", value);
@@ -180,8 +187,8 @@ export default function CashbackForm() {
 
         <div className="space-y-2">
           <Label htmlFor="category">Categoria *</Label>
-          <Select 
-            value={selectedCategory} 
+          <Select
+            value={selectedCategory}
             onValueChange={(value) => {
               setSelectedCategory(value);
               setValue("category", value);
@@ -202,13 +209,13 @@ export default function CashbackForm() {
 
       <div className="space-y-2">
         <Label htmlFor="purchaseValue">Valor da Compra (R$) *</Label>
-        <Input 
-          id="purchaseValue" 
-          type="number" 
-          step="0.01" 
-          {...register("purchaseValue")} 
-          placeholder="0.00" 
-          className="bg-muted border-border focus:border-primary" 
+        <Input
+          id="purchaseValue"
+          type="number"
+          step="0.01"
+          {...register("purchaseValue")}
+          placeholder="0.00"
+          className="bg-muted border-border focus:border-primary"
         />
         {errors.purchaseValue && <p className="text-destructive text-sm">{errors.purchaseValue.message}</p>}
       </div>
@@ -218,13 +225,13 @@ export default function CashbackForm() {
           <p className="text-sm text-blue-800">
             🎉 <strong>{selectedCategory}</strong> tem cashback de até {' '}
             <span className="font-bold">
-              {selectedCategory === "Eletrônicos" ? "10%" : 
-               selectedCategory === "Moda" ? "8%" :
-               selectedCategory === "Casa & Decoração" ? "7%" :
-               selectedCategory === "Beleza" ? "6%" :
-               selectedCategory === "Esportes" ? "5%" :
-               selectedCategory === "Livros" ? "4%" :
-               selectedCategory === "Alimentação" ? "3%" : "2%"}
+              {selectedCategory === "Eletrônicos" ? "10%" :
+                selectedCategory === "Moda" ? "8%" :
+                  selectedCategory === "Casa & Decoração" ? "7%" :
+                    selectedCategory === "Beleza" ? "6%" :
+                      selectedCategory === "Esportes" ? "5%" :
+                        selectedCategory === "Livros" ? "4%" :
+                          selectedCategory === "Alimentação" ? "3%" : "2%"}
             </span>
           </p>
         </div>
