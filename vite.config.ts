@@ -1,10 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import { cloudflare } from "@cloudflare/vite-plugin";
 import path from "path";
 
-
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   server: {
     host: "::",
     port: 8080,
@@ -16,10 +16,13 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist'
   },
-  plugins: [react()].filter(Boolean),
+  plugins: [
+    react(),
+    cloudflare()
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-}));
+});
